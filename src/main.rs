@@ -12,6 +12,7 @@ fn main() {
     //   How do you do that in Rust?
     //
     // What sort of test cases are needed?
+    // What sort of integration tests should there be?
 }
 
 pub mod tap {
