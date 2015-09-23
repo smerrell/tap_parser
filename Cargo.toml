@@ -2,3 +2,6 @@
 name = "tap_parser"
 version = "0.1.0"
 authors = ["Sam Merrell <merrell.sam@gmail.com>"]
+
+[dependencies]
+regex = "~0.1.41"
