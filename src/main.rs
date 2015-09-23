@@ -28,19 +28,20 @@ pub mod tap {
 
         match version {
             "13" => TapVersion::Thirteen,
-            _ => TapVersion::Undefined
+            _ => TapVersion::Unknown
         }
     }
 
     #[derive(Debug)]
     #[derive(PartialEq)]
     pub enum TapVersion {
+        Twelve,
         Thirteen,
-        Undefined,
+        Unknown, // remove this, should default to Twelve
     }
 }
 
-
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -55,6 +56,16 @@ mod tests {
     pub fn returns_unknown_when_version_number_unknown() {
         let input = "TAP version 123";
         let version = tap::read_version(&input);
-        assert_eq!(version, tap::TapVersion::Undefined);
+        assert_eq!(version, tap::TapVersion::Unknown);
+    }
+
+    #[test]
+    #[ignore]
+    pub fn defaults_to_twelve_when_no_version_line() {
+    }
+
+    #[test]
+    #[ignore]
+    pub fn errors_when_version_below_12() {
     }
 }
