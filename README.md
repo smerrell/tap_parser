@@ -1,3 +1,3 @@
-rust_tap
+Rust Tap Harness
 
-A [TAP](https://testanything.org/) parser build in Rust.
+A [TAP](https://testanything.org/) Harness built in Rust.
