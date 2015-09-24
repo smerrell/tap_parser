@@ -1,10 +1,23 @@
 extern crate regex;
 
+use std::io::{self, BufRead};
+
 fn main() {
     // Need to be able to read from stdin
     // But we want most of the code to not have to rely on stdin
 
-    println!("Hello, world!");
+    let stdin = io::stdin();
+    let mut iter = stdin.lock().lines();
+
+    // this is probably bad, bad, bad
+    let version_line = &iter.next().unwrap().unwrap();
+    println!("{:?}", version_line);
+    let version = tap::read_version(&version_line);
+    println!("TAP Version: {:?}", version);
+
+    for line in iter {
+        println!("{}", line.unwrap().trim());
+    }
 
     // What sort of types should we have?
     // How do you handle parsing a stream of text?
