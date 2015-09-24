@@ -21,14 +21,20 @@ pub mod tap {
     pub fn read_version(input: &str) -> TapVersion {
         let re = Regex::new(r"^TAP version (?P<version>\d+)$").unwrap();
         if !re.is_match(&input) {
-            panic!("We didn't get the TAP version")
+            println!("no match");
+            return TapVersion::Twelve
         }
 
         let captures = re.captures(&input).unwrap();
-        let version = captures.name("version").unwrap();
+        let version = captures.name("version")
+            .unwrap()
+            .parse::<i32>()
+            .unwrap();
 
         match version {
-            "13" => TapVersion::Thirteen,
+            0 ... 11 => panic!("Can not declare TAP version below 12"),
+            12 => TapVersion::Twelve,
+            13 => TapVersion::Thirteen,
             _ => TapVersion::Unknown
         }
     }
@@ -38,7 +44,7 @@ pub mod tap {
     pub enum TapVersion {
         Twelve,
         Thirteen,
-        Unknown, // remove this, should default to Twelve
+        Unknown,
     }
 }
 
@@ -54,6 +60,13 @@ mod tests {
     }
 
     #[test]
+    pub fn parses_tap_version_twelve() {
+        let input = "TAP version 12";
+        let version = tap::read_version(&input);
+        assert_eq!(version, tap::TapVersion::Twelve);
+    }
+
+    #[test]
     pub fn returns_unknown_when_version_number_unknown() {
         let input = "TAP version 123";
         let version = tap::read_version(&input);
@@ -61,12 +74,16 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn defaults_to_twelve_when_no_version_line() {
+        let input = "";
+        let version = tap::read_version(&input);
+        assert_eq!(version, tap::TapVersion::Twelve);
     }
 
     #[test]
-    #[ignore]
+    #[should_panic(expected = "Can not declare TAP version below 12")]
     pub fn errors_when_version_below_12() {
+        let input = "TAP version 11";
+        let version = tap::read_version(&input);
     }
 }
