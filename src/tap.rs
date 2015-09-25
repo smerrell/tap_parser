@@ -30,15 +30,15 @@ pub enum TapVersion {
 }
 
 #[derive(Debug)]
-pub struct tap_parser {
+pub struct TapParser {
     version: TapVersion,
     test_count: i32,
     total_tests: i32,
 }
 
-impl tap_parser {
-    fn new(version: TapVersion) -> tap_parser {
-        tap_parser {
+impl TapParser {
+    fn new(version: TapVersion) -> TapParser {
+        TapParser {
             version: version,
             test_count: 0,
             total_tests: 0,
@@ -105,14 +105,14 @@ mod tests {
 
     #[test]
     pub fn can_build_tap_parser() {
-        let parser = tap_parser::new(TapVersion::Thirteen);
+        let parser = TapParser::new(TapVersion::Thirteen);
         assert_eq!(parser.version, TapVersion::Thirteen);
     }
 
     #[test]
     pub fn returns_number_of_tests_from_plan_line() {
         let input = "1..14";
-        let mut parser = tap_parser::new(TapVersion::Thirteen);
+        let mut parser = TapParser::new(TapVersion::Thirteen);
 
         parser.read_line(&input);
         assert_eq!(parser.total_tests, 14);
