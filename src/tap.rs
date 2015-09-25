@@ -38,7 +38,7 @@ pub struct TapParser {
 }
 
 impl TapParser {
-    fn new(version: TapVersion) -> TapParser {
+    pub fn new(version: TapVersion) -> TapParser {
         TapParser {
             version: version,
             test_count: 0,
@@ -47,7 +47,7 @@ impl TapParser {
         }
     }
 
-    fn read_line(&mut self, line: &str) {
+    pub fn read_line(&mut self, line: &str) {
         let plan_re = Regex::new(r"^\d+..(?P<test_plan>\d+)$").unwrap();
 
         if plan_re.is_match(&line) {
@@ -67,8 +67,8 @@ impl TapParser {
         }
     }
 
-    fn summarize(&self) -> String {
-        format!("{} tests", &self.total_tests).to_string()
+    pub fn summarize(&self) -> String {
+        format!("{} tests ran, {} failed", &self.total_tests, &self.failed_tests).to_string()
     }
 }
 

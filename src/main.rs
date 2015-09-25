@@ -12,12 +12,14 @@ fn main() {
     let version_line = &iter.next().unwrap().unwrap();
     println!("{:?}", version_line);
     let version = tap::read_version(&version_line);
-    // build a parser on a version?
     println!("TAP Version: {:?}", version);
 
+    let mut parser = tap::TapParser::new(version);
+
     for line in iter {
-        println!("{}", line.unwrap().trim());
-        // feed lines into the parser?
+        parser.read_line(&line.unwrap().trim());
     }
+
+    println!("{}", &parser.summarize());
 }
 
