@@ -41,7 +41,7 @@ impl TapParser {
     pub fn new(version: TapVersion) -> TapParser {
         TapParser {
             version: version,
-            test_count: 0,
+            test_count: 1,
             total_tests: 0,
             failed_tests: 0,
         }
@@ -70,13 +70,17 @@ impl TapParser {
 
             match is_failed {
                 Some(_) => self.failed_tests += 1,
-                None => {},
+                None => self.test_count += 1,
             }
         }
     }
 
     pub fn summarize(&self) -> String {
-        format!("{} tests ran, {} failed", &self.total_tests, &self.failed_tests).to_string()
+        let mut failed_tests = self.failed_tests;
+        if self.total_tests != self.test_count {
+            failed_tests += self.total_tests - self.test_count;
+        }
+        format!("{} tests ran, {} failed", &self.total_tests, failed_tests).to_string()
     }
 }
 
@@ -137,7 +141,7 @@ mod tests {
     #[test]
     pub fn tracks_number_of_failed_tests() {
         let input =
-r"1..5
+"1..5
 ok - Test the thing
 ok - Test another thing
 not ok - Test something broken
@@ -152,6 +156,26 @@ not ok - Test another broken thing";
 
         println!("{:?}", parser);
         assert_eq!(parser.failed_tests, 2);
+    }
+
+    #[test]
+    pub fn missing_test_counted_as_failed() {
+        let input =
+"1..5
+ok - Test the thing
+not ok - Test something broken
+ok - Test again";
+        let mut parser = TapParser::new(TapVersion::Thirteen);
+        let lines = input.lines();
+        for line in lines {
+            println!("{}", line);
+            parser.read_line(&line);
+        }
+
+        let output = parser.summarize();
+        println!("{}", output);
+        println!("{:?}", parser);
+        assert!(output.contains("3 failed"));
     }
 
 }
