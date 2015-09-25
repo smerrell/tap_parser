@@ -4,20 +4,21 @@ use std::io::{self, BufRead};
 
 mod tap;
 
+// colorized output, eventually
+// flag to disable colorized output
 fn main() {
     let stdin = io::stdin();
     let mut iter = stdin.lock().lines();
 
     // this is probably bad, bad, bad
     let version_line = &iter.next().unwrap().unwrap();
-    println!("{:?}", version_line);
     let version = tap::read_version(&version_line);
-    println!("TAP Version: {:?}", version);
 
     let mut parser = tap::TapParser::new(version);
 
-    for line in iter {
-        parser.read_line(&line.unwrap().trim());
+    for line_res in iter {
+        let line = line_res.unwrap();
+        parser.read_line(&line.trim());
     }
 
     println!("{}", &parser.summarize());
