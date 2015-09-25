@@ -29,6 +29,7 @@ pub enum TapVersion {
     Unknown,
 }
 
+#[derive(Debug)]
 pub struct tap_parser {
     version: TapVersion,
     test_count: i32,
@@ -45,7 +46,7 @@ impl tap_parser {
     }
 
     fn read_line(&mut self, line: &str) {
-        let plan_re = Regex::new(r"$\d+..(?P<test_plan>\d+)").unwrap();
+        let plan_re = Regex::new(r"^\d+..(?P<test_plan>\d+)$").unwrap();
         if plan_re.is_match(&line) {
             let test_plan = plan_re.captures(&line)
                 .unwrap()
@@ -54,7 +55,6 @@ impl tap_parser {
                 .parse::<i32>()
                 .unwrap();
 
-            println!("test_plan: {}", &test_plan);
             self.total_tests = test_plan;
         }
     }
@@ -110,15 +110,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn returns_number_of_tests_from_plan_line() {
         let input = "1..14";
         let mut parser = tap_parser::new(TapVersion::Thirteen);
-        &mut parser.read_line(&input);
-        let output = &mut parser.summarize();
 
-        println!("output: {}", output);
-        assert!(output.contains("14"));
+        parser.read_line(&input);
+        assert_eq!(parser.total_tests, 14);
     }
 
 }
