@@ -34,6 +34,7 @@ pub struct TapParser {
     version: TapVersion,
     test_count: i32,
     total_tests: i32,
+    failed_tests: i32,
 }
 
 impl TapParser {
@@ -42,11 +43,13 @@ impl TapParser {
             version: version,
             test_count: 0,
             total_tests: 0,
+            failed_tests: 0,
         }
     }
 
     fn read_line(&mut self, line: &str) {
         let plan_re = Regex::new(r"^\d+..(?P<test_plan>\d+)$").unwrap();
+
         if plan_re.is_match(&line) {
             let test_plan = plan_re.captures(&line)
                 .unwrap()
@@ -56,6 +59,11 @@ impl TapParser {
                 .unwrap();
 
             self.total_tests = test_plan;
+        }
+
+        let failed_test = Regex::new(r"^not ok - (?P<test_name>[^#]+)").unwrap();
+        if failed_test.is_match(&line) {
+            self.failed_tests += 1;
         }
     }
 
@@ -116,6 +124,27 @@ mod tests {
 
         parser.read_line(&input);
         assert_eq!(parser.total_tests, 14);
+    }
+
+    #[test]
+    pub fn tracks_number_of_failed_tests() {
+        let input =
+r"1..5
+ok - Test the thing
+ok - Test another thing
+not ok - Test something broken
+ok - Test again
+not ok - Test another broken thing";
+        let mut parser = TapParser::new(TapVersion::Thirteen);
+        let lines = input.lines();
+        for line in lines {
+            println!("{}", line);
+            parser.read_line(&line);
+        }
+
+        println!("{:?}", parser);
+        assert_eq!(parser.failed_tests, 2);
+
     }
 
 }
