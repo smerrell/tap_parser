@@ -2,8 +2,8 @@ use regex::Regex;
 
 pub fn read_version(input: &str) -> TapVersion {
     let re = Regex::new(r"^TAP version (?P<version>\d+)$").unwrap();
+
     if !re.is_match(&input) {
-        println!("no match");
         return TapVersion::Twelve
     }
 
@@ -61,9 +61,17 @@ impl TapParser {
             self.total_tests = test_plan;
         }
 
-        let failed_test = Regex::new(r"^not ok - (?P<test_name>[^#]+)").unwrap();
-        if failed_test.is_match(&line) {
-            self.failed_tests += 1;
+        let test_line = Regex::new(r"^(?P<failed>not )?ok - (?P<test_name>[^#]+)").unwrap();
+        if test_line.is_match(&line) {
+
+            let is_failed = test_line.captures(&line)
+                .unwrap()
+                .name("failed");
+
+            match is_failed {
+                Some(_) => self.failed_tests += 1,
+                None => {},
+            }
         }
     }
 
@@ -144,7 +152,6 @@ not ok - Test another broken thing";
 
         println!("{:?}", parser);
         assert_eq!(parser.failed_tests, 2);
-
     }
 
 }
