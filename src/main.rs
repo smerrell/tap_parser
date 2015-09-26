@@ -14,7 +14,7 @@ fn main() {
     let version_line = &iter.next().unwrap().unwrap();
     let version = tap::read_version(&version_line);
 
-    let mut parser = tap::TapParser::new(version);
+    let mut parser = tap::TapHarness::new(version);
 
     for line_res in iter {
         let line = line_res.unwrap();

@@ -30,16 +30,16 @@ pub enum TapVersion {
 }
 
 #[derive(Debug)]
-pub struct TapParser {
+pub struct TapHarness {
     version: TapVersion,
     test_count: i32,
     total_tests: i32,
     failed_tests: i32,
 }
 
-impl TapParser {
-    pub fn new(version: TapVersion) -> TapParser {
-        TapParser {
+impl TapHarness {
+    pub fn new(version: TapVersion) -> TapHarness {
+        TapHarness {
             version: version,
             test_count: 1,
             total_tests: 0,
@@ -125,14 +125,14 @@ mod tests {
 
     #[test]
     pub fn can_build_tap_parser() {
-        let parser = TapParser::new(TapVersion::Thirteen);
+        let parser = TapHarness::new(TapVersion::Thirteen);
         assert_eq!(parser.version, TapVersion::Thirteen);
     }
 
     #[test]
     pub fn returns_number_of_tests_from_plan_line() {
         let input = "1..14";
-        let mut parser = TapParser::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
 
         parser.read_line(&input);
         assert_eq!(parser.total_tests, 14);
@@ -147,7 +147,7 @@ ok - Test another thing
 not ok - Test something broken
 ok - Test again
 not ok - Test another broken thing";
-        let mut parser = TapParser::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
         let lines = input.lines();
         for line in lines {
             println!("{}", line);
@@ -165,7 +165,7 @@ not ok - Test another broken thing";
 ok - Test the thing
 not ok - Test something broken
 ok - Test again";
-        let mut parser = TapParser::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
         let lines = input.lines();
         for line in lines {
             println!("{}", line);
