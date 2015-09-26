@@ -41,7 +41,7 @@ impl TapHarness {
     pub fn new(version: TapVersion) -> TapHarness {
         TapHarness {
             version: version,
-            test_count: 1,
+            test_count: 0,
             total_tests: 0,
             failed_tests: 0,
         }
@@ -61,8 +61,9 @@ impl TapHarness {
             self.total_tests = test_plan;
         }
 
-        let test_line = Regex::new(r"^(?P<failed>not )?ok - (?P<test_name>[^#]+)").unwrap();
+        let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)$").unwrap();
         if test_line.is_match(&line) {
+            self.test_count += 1;
 
             let is_failed = test_line.captures(&line)
                 .unwrap()
@@ -70,7 +71,7 @@ impl TapHarness {
 
             match is_failed {
                 Some(_) => self.failed_tests += 1,
-                None => self.test_count += 1,
+                None => {},
             }
         }
     }
@@ -80,7 +81,7 @@ impl TapHarness {
         if self.total_tests != self.test_count {
             failed_tests += self.total_tests - self.test_count;
         }
-        format!("{} tests ran, {} failed", &self.total_tests, failed_tests).to_string()
+        format!("{} tests ran; {} failed", &self.total_tests, failed_tests).to_string()
     }
 }
 
