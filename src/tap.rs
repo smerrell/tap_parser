@@ -35,6 +35,7 @@ pub struct TapHarness {
     test_count: i32,
     total_tests: i32,
     failed_tests: i32,
+    skipped_tests: i32,
 }
 
 impl TapHarness {
@@ -44,6 +45,7 @@ impl TapHarness {
             test_count: 0,
             total_tests: 0,
             failed_tests: 0,
+            skipped_tests: 0,
         }
     }
 
@@ -61,18 +63,32 @@ impl TapHarness {
             self.total_tests = test_plan;
         }
 
-        let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)$").unwrap();
+        let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?").unwrap();
         if test_line.is_match(&line) {
             self.test_count += 1;
 
-            let is_failed = test_line.captures(&line)
-                .unwrap()
+            let is_failed = test_line.captures(&line).unwrap()
                 .name("failed");
 
             match is_failed {
                 Some(_) => self.failed_tests += 1,
                 None => {},
             }
+
+            let directive = test_line.captures(&line).unwrap()
+                .name("directive");
+            let test_name = test_line.captures(&line).unwrap()
+                .name("test_name");
+
+            match directive {
+                Some(d) => {
+                    if d == "SKIP" {
+                        self.skipped_tests += 1;
+                    }
+                },
+                None => {},
+            }
+
         }
     }
 
@@ -177,6 +193,25 @@ ok - Test again";
         println!("{}", output);
         println!("{:?}", parser);
         assert!(output.contains("3 failed"));
+    }
+
+    #[test]
+    pub fn skipped_test_not_considered_failed() {
+        let input =
+"1..5
+ok 1 - Test the thing # SKIP no foobaz available
+ok 2 - Test another thing # SKIP no foobaz available
+not ok 3 - Test something broken
+ok 4 - Test again
+not ok 5 - Test another broken thing";
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let lines = input.lines();
+        for line in lines {
+            parser.read_line(&line);
+        }
+
+        println!("{:?}", parser);
+        assert_eq!(parser.skipped_tests, 2);
     }
 
 }
