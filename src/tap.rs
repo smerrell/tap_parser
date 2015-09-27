@@ -143,11 +143,11 @@ mod tests {
     pub fn tracks_number_of_failed_tests() {
         let input =
 "1..5
-ok - Test the thing
-ok - Test another thing
-not ok - Test something broken
-ok - Test again
-not ok - Test another broken thing";
+ok 1 - Test the thing
+ok 2 - Test another thing
+not ok 3 - Test something broken
+ok 4 - Test again
+not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new(TapVersion::Thirteen);
         let lines = input.lines();
         for line in lines {
