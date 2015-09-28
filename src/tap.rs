@@ -36,6 +36,7 @@ pub struct TapHarness {
     total_tests: i32,
     failed_tests: i32,
     skipped_tests: i32,
+    incomplete_tests: i32,
 }
 
 impl TapHarness {
@@ -46,6 +47,7 @@ impl TapHarness {
             total_tests: 0,
             failed_tests: 0,
             skipped_tests: 0,
+            incomplete_tests: 0,
         }
     }
 
@@ -76,6 +78,8 @@ impl TapHarness {
                 Some(d) => {
                     if d == "SKIP" {
                         self.skipped_tests += 1;
+                    } else if d == "TODO" {
+                        self.incomplete_tests += 1;
                     }
                 },
                 None => {
@@ -213,6 +217,45 @@ not ok 5 - Test another broken thing";
 
         println!("{:?}", parser);
         assert_eq!(parser.skipped_tests, 3);
+        assert_eq!(parser.failed_tests, 1)
+    }
+
+    #[test]
+    pub fn todo_tests_not_considered_failed() {
+        let input =
+"1..5
+ok 1 - Test the thing # TODO finish this test
+ok 2 - Test another thing # TODO finish this test
+not ok 3 - Test something broken # TODO finish this test
+ok 4 - Test again
+not ok 5 - Test another broken thing";
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let lines = input.lines();
+        for line in lines {
+            parser.read_line(&line);
+        }
+
+        println!("{:?}", parser);
+        assert_eq!(parser.failed_tests, 1)
+    }
+
+    #[test]
+    pub fn todo_tests_counted_as_incomplete_tests() {
+        let input =
+"1..5
+ok 1 - Test the thing # TODO finish this test
+ok 2 - Test another thing # TODO finish this test
+not ok 3 - Test something broken # TODO finish this test
+ok 4 - Test again
+not ok 5 - Test another broken thing";
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let lines = input.lines();
+        for line in lines {
+            parser.read_line(&line);
+        }
+
+        println!("{:?}", parser);
+        assert_eq!(parser.incomplete_tests, 3);
         assert_eq!(parser.failed_tests, 1)
     }
 
