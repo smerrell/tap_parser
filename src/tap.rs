@@ -67,14 +67,6 @@ impl TapHarness {
         if test_line.is_match(&line) {
             self.test_count += 1;
 
-            let is_failed = test_line.captures(&line).unwrap()
-                .name("failed");
-
-            match is_failed {
-                Some(_) => self.failed_tests += 1,
-                None => {},
-            }
-
             let directive = test_line.captures(&line).unwrap()
                 .name("directive");
             let test_name = test_line.captures(&line).unwrap()
@@ -86,7 +78,16 @@ impl TapHarness {
                         self.skipped_tests += 1;
                     }
                 },
-                None => {},
+                None => {
+                    // Probably can do this a better way...
+                    let is_failed = test_line.captures(&line).unwrap()
+                        .name("failed");
+
+                    match is_failed {
+                        Some(_) => self.failed_tests += 1,
+                        None => {},
+                    }
+                },
             }
 
         }
@@ -201,7 +202,7 @@ ok - Test again";
 "1..5
 ok 1 - Test the thing # SKIP no foobaz available
 ok 2 - Test another thing # SKIP no foobaz available
-not ok 3 - Test something broken
+not ok 3 - Test something broken # SKIP no bar
 ok 4 - Test again
 not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new(TapVersion::Thirteen);
@@ -211,7 +212,8 @@ not ok 5 - Test another broken thing";
         }
 
         println!("{:?}", parser);
-        assert_eq!(parser.skipped_tests, 2);
+        assert_eq!(parser.skipped_tests, 3);
+        assert_eq!(parser.failed_tests, 1)
     }
 
 }
