@@ -18,7 +18,7 @@ fn main() {
         match result {
             Some(res) => {
                 // will need to figure out skipped and incomplete tests
-                let outcome = if res.passed { "Passed" } else { "Failed" };
+                let outcome = if res.passed { "✓ Passed" } else { "𐄂 Failed" };
                 println!("{} - {}", outcome, res.name);
             }
             None => {}

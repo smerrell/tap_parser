@@ -39,6 +39,7 @@ pub struct TapHarness {
     incomplete_tests: i32,
 }
 
+#[derive(Debug)]
 pub struct TestResult {
     pub name: String,
     pub passed: bool,
@@ -93,18 +94,18 @@ impl TapHarness {
                     let is_failed = test_line.captures(&line).unwrap()
                         .name("failed");
 
-                    let mut failed = false;
+                    let mut passed = true;
                     match is_failed {
                         Some(_) => {
                             self.failed_tests += 1;
-                            failed = true;
+                            passed = false;
                         },
                         None => {},
                     }
 
                     result = Some(TestResult {
                         name: test_name.unwrap().to_string(),
-                        passed: failed,
+                        passed: passed,
                     });
                 },
             }
