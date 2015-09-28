@@ -39,6 +39,11 @@ pub struct TapHarness {
     incomplete_tests: i32,
 }
 
+pub struct TestResult {
+    pub name: String,
+    pub passed: bool,
+}
+
 impl TapHarness {
     pub fn new(version: TapVersion) -> TapHarness {
         TapHarness {
@@ -51,7 +56,7 @@ impl TapHarness {
         }
     }
 
-    pub fn read_line(&mut self, line: &str) {
+    pub fn read_line(&mut self, line: &str) -> Option<TestResult> {
         let plan_re = Regex::new(r"^\d+..(?P<test_plan>\d+)$").unwrap();
 
         if plan_re.is_match(&line) {
@@ -65,6 +70,7 @@ impl TapHarness {
             self.total_tests = test_plan;
         }
 
+        let mut result = None;
         let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?").unwrap();
         if test_line.is_match(&line) {
             self.test_count += 1;
@@ -87,14 +93,24 @@ impl TapHarness {
                     let is_failed = test_line.captures(&line).unwrap()
                         .name("failed");
 
+                    let mut failed = false;
                     match is_failed {
-                        Some(_) => self.failed_tests += 1,
+                        Some(_) => {
+                            self.failed_tests += 1;
+                            failed = true;
+                        },
                         None => {},
                     }
+
+                    result = Some(TestResult {
+                        name: test_name.unwrap().to_string(),
+                        passed: failed,
+                    });
                 },
             }
-
         }
+
+        result
     }
 
     pub fn summarize(&self) -> String {
@@ -102,7 +118,12 @@ impl TapHarness {
         if self.total_tests != self.test_count {
             failed_tests += self.total_tests - self.test_count;
         }
-        format!("{} tests ran; {} failed", &self.total_tests, failed_tests).to_string()
+
+        format!("{} tests ran; {} failed; {} incomplete, {} skipped",
+                &self.total_tests,
+                failed_tests,
+                &self.incomplete_tests,
+                &self.skipped_tests).to_string()
     }
 }
 
