@@ -1,37 +1,7 @@
 use regex::Regex;
 
-pub fn read_version(input: &str) -> TapVersion {
-    let re = Regex::new(r"^TAP version (?P<version>\d+)$").unwrap();
-
-    if !re.is_match(&input) {
-        return TapVersion::Twelve
-    }
-
-    let captures = re.captures(&input).unwrap();
-    let version = captures.name("version")
-        .unwrap()
-        .parse::<i32>()
-        .unwrap();
-
-    match version {
-        0 ... 11 => panic!("Can not declare TAP version below 12"),
-        12 => TapVersion::Twelve,
-        13 => TapVersion::Thirteen,
-        _ => TapVersion::Unknown
-    }
-}
-
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum TapVersion {
-    Twelve,
-    Thirteen,
-    Unknown,
-}
-
 #[derive(Debug)]
 pub struct TapHarness {
-    version: TapVersion,
     test_count: i32,
     total_tests: i32,
     failed_tests: i32,
@@ -46,9 +16,8 @@ pub struct TestResult {
 }
 
 impl TapHarness {
-    pub fn new(version: TapVersion) -> TapHarness {
+    pub fn new() -> TapHarness {
         TapHarness {
-            version: version,
             test_count: 0,
             total_tests: 0,
             failed_tests: 0,
@@ -133,50 +102,9 @@ mod tests {
     use super::*;
 
     #[test]
-    pub fn parses_tap_version() {
-        let input = "TAP version 13";
-        let version = read_version(&input);
-        assert_eq!(version, TapVersion::Thirteen);
-    }
-
-    #[test]
-    pub fn parses_tap_version_twelve() {
-        let input = "TAP version 12";
-        let version = read_version(&input);
-        assert_eq!(version, TapVersion::Twelve);
-    }
-
-    #[test]
-    pub fn returns_unknown_when_version_number_unknown() {
-        let input = "TAP version 123";
-        let version = read_version(&input);
-        assert_eq!(version, TapVersion::Unknown);
-    }
-
-    #[test]
-    pub fn defaults_to_twelve_when_no_version_line() {
-        let input = "";
-        let version = read_version(&input);
-        assert_eq!(version, TapVersion::Twelve);
-    }
-
-    #[test]
-    #[should_panic(expected = "Can not declare TAP version below 12")]
-    pub fn errors_when_version_below_12() {
-        let input = "TAP version 11";
-        let version = read_version(&input);
-    }
-
-    #[test]
-    pub fn can_build_tap_parser() {
-        let parser = TapHarness::new(TapVersion::Thirteen);
-        assert_eq!(parser.version, TapVersion::Thirteen);
-    }
-
-    #[test]
     pub fn returns_number_of_tests_from_plan_line() {
         let input = "1..14";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
 
         parser.read_line(&input);
         assert_eq!(parser.total_tests, 14);
@@ -191,7 +119,7 @@ ok 2 - Test another thing
 not ok 3 - Test something broken
 ok 4 - Test again
 not ok 5 - Test another broken thing";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
             println!("{}", line);
@@ -209,7 +137,7 @@ not ok 5 - Test another broken thing";
 ok - Test the thing
 not ok - Test something broken
 ok - Test again";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
             println!("{}", line);
@@ -231,7 +159,7 @@ ok 2 - Test another thing # SKIP no foobaz available
 not ok 3 - Test something broken # SKIP no bar
 ok 4 - Test again
 not ok 5 - Test another broken thing";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
             parser.read_line(&line);
@@ -251,7 +179,7 @@ ok 2 - Test another thing # TODO finish this test
 not ok 3 - Test something broken # TODO finish this test
 ok 4 - Test again
 not ok 5 - Test another broken thing";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
             parser.read_line(&line);
@@ -270,7 +198,7 @@ ok 2 - Test another thing # TODO finish this test
 not ok 3 - Test something broken # TODO finish this test
 ok 4 - Test again
 not ok 5 - Test another broken thing";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
             parser.read_line(&line);
@@ -286,7 +214,7 @@ not ok 5 - Test another broken thing";
         let input =
 "1..5
 not ok Test something broken";
-        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut parser = TapHarness::new();
         let mut lines = input.lines();
         parser.read_line(&lines.next().unwrap());
         let result = parser.read_line(&lines.next().unwrap());
