@@ -10,6 +10,7 @@ pub struct TapHarness {
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub struct TestResult {
     pub name: String,
     pub passed: bool,
