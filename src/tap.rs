@@ -281,7 +281,19 @@ not ok 5 - Test another broken thing";
         assert_eq!(parser.failed_tests, 1)
     }
 
-    // TODO: Add test to verify test result output is what is expected
+    #[test]
+    pub fn read_line_for_failed_test_returns_passed_false() {
+        let input =
+"1..5
+not ok Test something broken";
+        let mut parser = TapHarness::new(TapVersion::Thirteen);
+        let mut lines = input.lines();
+        parser.read_line(&lines.next().unwrap());
+        let result = parser.read_line(&lines.next().unwrap());
+
+        println!("{:?}", result);
+        assert_eq!(result.unwrap().passed, false);
+    }
     // TODO: Probably break some of these out into "integration" tests in their own file
     // TODO: What is the exact format for tap output? Is there supposed to be a dash or not?
 
