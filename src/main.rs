@@ -1,3 +1,6 @@
+#[cfg(test)]
+extern crate hamcrest;
+
 extern crate regex;
 
 mod tap;

@@ -101,6 +101,7 @@ impl TapHarness {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hamcrest::{assert_that,equal_to,is};
 
     #[test]
     pub fn returns_number_of_tests_from_plan_line() {
@@ -108,7 +109,7 @@ mod tests {
         let mut parser = TapHarness::new();
 
         parser.read_line(&input);
-        assert_eq!(parser.total_tests, 14);
+        assert_that(parser.total_tests, is(equal_to(14)));
     }
 
     #[test]
@@ -123,12 +124,10 @@ not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
-            println!("{}", line);
             parser.read_line(&line);
         }
 
-        println!("{:?}", parser);
-        assert_eq!(parser.failed_tests, 2);
+        assert_that(parser.failed_tests, is(equal_to(2)));
     }
 
     #[test]
@@ -141,13 +140,10 @@ ok - Test again";
         let mut parser = TapHarness::new();
         let lines = input.lines();
         for line in lines {
-            println!("{}", line);
             parser.read_line(&line);
         }
 
         let output = parser.summarize();
-        println!("{}", output);
-        println!("{:?}", parser);
         assert!(output.contains("3 failed"));
     }
 
@@ -166,9 +162,8 @@ not ok 5 - Test another broken thing";
             parser.read_line(&line);
         }
 
-        println!("{:?}", parser);
-        assert_eq!(parser.skipped_tests, 3);
-        assert_eq!(parser.failed_tests, 1)
+        assert_that(parser.skipped_tests, is(equal_to(3)));
+        assert_that(parser.failed_tests, is(equal_to(1)));
     }
 
     #[test]
@@ -186,8 +181,7 @@ not ok 5 - Test another broken thing";
             parser.read_line(&line);
         }
 
-        println!("{:?}", parser);
-        assert_eq!(parser.failed_tests, 1)
+        assert_that(parser.failed_tests, is(equal_to(1)));
     }
 
     #[test]
@@ -205,9 +199,8 @@ not ok 5 - Test another broken thing";
             parser.read_line(&line);
         }
 
-        println!("{:?}", parser);
-        assert_eq!(parser.incomplete_tests, 3);
-        assert_eq!(parser.failed_tests, 1)
+        assert_that(parser.incomplete_tests, is(equal_to(3)));
+        assert_that(parser.failed_tests, is(equal_to(1)));
     }
 
     #[test]
@@ -220,10 +213,7 @@ not ok Test something broken";
         parser.read_line(&lines.next().unwrap());
         let result = parser.read_line(&lines.next().unwrap());
 
-        println!("{:?}", result);
-        assert_eq!(result.unwrap().passed, false);
+        assert_that(result.unwrap().passed, is(equal_to(false)));
     }
-    // TODO: Probably break some of these out into "integration" tests in their own file
     // TODO: What is the exact format for tap output? Is there supposed to be a dash or not?
-
 }
