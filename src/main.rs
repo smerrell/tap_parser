@@ -2,6 +2,7 @@
 extern crate hamcrest;
 
 extern crate regex;
+extern crate term;
 
 mod tap;
 
@@ -14,6 +15,7 @@ fn main() {
     let stdin = io::stdin();
     let iter = stdin.lock().lines();
     let mut parser = TapHarness::new();
+    let mut term = term::stdout().unwrap();
 
     for line_res in iter {
         let line = line_res.unwrap();
@@ -23,10 +25,16 @@ fn main() {
             Some(res) => {
                 // will need to figure out skipped and incomplete tests
                 let outcome = if res.passed { "✓ Passed" } else { "𐄂 Failed" };
-                println!("{} - {}", outcome, res.name);
+                if res.passed {
+                    term.fg(term::color::GREEN).unwrap();
+                } else {
+                    term.fg(term::color::RED).unwrap();
+                }
+                writeln!(term, "{} - {}", outcome, res.name).unwrap();
             }
             None => {}
         }
+        term.reset().unwrap();
     }
 
     println!("{}", &parser.summarize());

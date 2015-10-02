@@ -9,6 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 regex = "~0.1.41"
+term = "0.2"
 
 [dev-dependencies]
 hamcrest = "0.1.0"
