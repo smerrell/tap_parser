@@ -2,7 +2,7 @@
 extern crate hamcrest;
 extern crate tap_parser;
 
-use tap_parser::tap::{TapHarness};
+use tap_parser::tap::{TapHarness,TestState};
 use hamcrest::{assert_that,equal_to,is};
 
 #[test]
@@ -16,7 +16,7 @@ not ok Test something broken";
     parser.read_line(&lines.next().unwrap());
     let result = parser.read_line(&lines.next().unwrap());
 
-    assert_that(result.unwrap().passed, is(equal_to(false)));
+    assert_that(result.unwrap().state, is(equal_to(TestState::Failed)));
 }
 
 #[test]

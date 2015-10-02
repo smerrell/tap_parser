@@ -13,7 +13,16 @@ pub struct TapHarness {
 #[derive(PartialEq)]
 pub struct TestResult {
     pub name: String,
-    pub passed: bool,
+    pub state: TestState,
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum TestState {
+    Passed,
+    Failed,
+    Skipped,
+    Incomplete
 }
 
 impl TapHarness {
@@ -51,31 +60,39 @@ impl TapHarness {
             let test_name = test_line.captures(&line).unwrap()
                 .name("test_name");
 
+            let mut test_result = TestState::Passed;
             match directive {
                 Some(d) => {
                     if d == "SKIP" {
                         self.skipped_tests += 1;
+                        test_result = TestState::Skipped;
                     } else if d == "TODO" {
                         self.incomplete_tests += 1;
+                        test_result = TestState::Incomplete;
                     }
+
+                    // TODO: Remove this duplication when returning a result
+                    result = Some(TestResult {
+                        name: test_name.unwrap().to_string(),
+                        state: test_result,
+                    });
                 },
                 None => {
                     // Probably can do this a better way...
                     let is_failed = test_line.captures(&line).unwrap()
                         .name("failed");
 
-                    let mut passed = true;
                     match is_failed {
                         Some(_) => {
                             self.failed_tests += 1;
-                            passed = false;
+                            test_result = TestState::Failed;
                         },
                         None => {},
                     }
 
                     result = Some(TestResult {
                         name: test_name.unwrap().to_string(),
-                        passed: passed,
+                        state: test_result,
                     });
                 },
             }
@@ -213,7 +230,7 @@ not ok Test something broken";
         parser.read_line(&lines.next().unwrap());
         let result = parser.read_line(&lines.next().unwrap());
 
-        assert_that(result.unwrap().passed, is(equal_to(false)));
+        assert_that(result.unwrap().state, is(equal_to(TestState::Failed)));
     }
     // TODO: What is the exact format for tap output? Is there supposed to be a dash or not?
 }

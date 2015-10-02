@@ -7,7 +7,7 @@ extern crate term;
 mod tap;
 
 use std::io::{self, BufRead};
-use tap::{TapHarness};
+use tap::{TapHarness,TestState};
 
 // colorized output, eventually
 // flag to disable colorized output
@@ -23,14 +23,21 @@ fn main() {
 
         match result {
             Some(res) => {
-                // will need to figure out skipped and incomplete tests
-                let outcome = if res.passed { "✓ Passed" } else { "𐄂 Failed" };
-                if res.passed {
-                    term.fg(term::color::GREEN).unwrap();
-                } else {
-                    term.fg(term::color::RED).unwrap();
-                }
-                writeln!(term, "{} - {}", outcome, res.name).unwrap();
+                let outcome = match res.state {
+                    TestState::Passed => "✓",
+                    TestState::Failed => "𐄂",
+                    TestState::Skipped => "—",
+                    TestState::Incomplete => "—",
+                };
+
+                match res.state {
+                    TestState::Passed => term.fg(term::color::GREEN).unwrap(),
+                    TestState::Failed => term.fg(term::color::RED).unwrap(),
+                    TestState::Skipped => term.fg(term::color::YELLOW).unwrap(),
+                    TestState::Incomplete => term.fg(term::color::YELLOW).unwrap(),
+                };
+
+                writeln!(term, "{} {}", outcome, res.name).unwrap();
             }
             None => {}
         }
