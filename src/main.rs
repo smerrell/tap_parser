@@ -1,3 +1,5 @@
+#![feature(drain)]
+
 #[cfg(test)]
 extern crate hamcrest;
 
@@ -38,6 +40,12 @@ fn main() {
                 };
 
                 writeln!(term, "{} {}", outcome, res.name).unwrap();
+                if let Some(diagnostic) = res.diagnostics {
+                    term.reset().unwrap();
+                    for message in diagnostic {
+                        println!("  {}", message);
+                    }
+                }
             }
             None => {}
         }

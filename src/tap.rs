@@ -7,6 +7,7 @@ pub struct TapHarness {
     failed_tests: i32,
     skipped_tests: i32,
     incomplete_tests: i32,
+    diagnostics: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -14,6 +15,7 @@ pub struct TapHarness {
 pub struct TestResult {
     pub name: String,
     pub state: TestState,
+    pub diagnostics: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -33,6 +35,7 @@ impl TapHarness {
             failed_tests: 0,
             skipped_tests: 0,
             incomplete_tests: 0,
+            diagnostics: Vec::new(),
         }
     }
 
@@ -50,10 +53,24 @@ impl TapHarness {
         }
     }
 
+    fn handle_diagnostic_line(&mut self, line: &str) {
+        let diagnostic_re = Regex::new(r"^# (?P<diagnostic>.*)").unwrap();
+        if diagnostic_re.is_match(&line) {
+            let message = diagnostic_re.captures(&line)
+                .unwrap()
+                .name("diagnostic")
+                .unwrap();
+
+            self.diagnostics.push(message.to_owned());
+        }
+
+    }
+
     pub fn read_line(&mut self, line: &str) -> Option<TestResult> {
 
         self.handle_test_plan(&line);
 
+        self.handle_diagnostic_line(&line);
         let mut result = None;
         let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?").unwrap();
         if test_line.is_match(&line) {
@@ -79,6 +96,7 @@ impl TapHarness {
                     result = Some(TestResult {
                         name: test_name.unwrap().to_string(),
                         state: test_result,
+                        diagnostics: None,
                     });
                 },
                 None => {
@@ -94,8 +112,13 @@ impl TapHarness {
                         None => {},
                     }
 
+                    // print all diagnostic lines if we've failed
                     result = Some(TestResult {
                         name: test_name.unwrap().to_string(),
+                        diagnostics: match &test_result {
+                            &TestState::Failed => Some(self.diagnostics.drain(..).collect()),
+                            _ => None
+                        },
                         state: test_result,
                     });
                 },
