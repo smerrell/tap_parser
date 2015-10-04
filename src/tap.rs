@@ -109,7 +109,9 @@ impl TapHarness {
                             self.failed_tests += 1;
                             test_result = TestState::Failed;
                         },
-                        None => {},
+                        None => {
+                            self.diagnostics.clear();
+                        },
                     }
 
                     // print all diagnostic lines if we've failed
