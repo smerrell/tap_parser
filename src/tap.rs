@@ -36,9 +36,8 @@ impl TapHarness {
         }
     }
 
-    pub fn read_line(&mut self, line: &str) -> Option<TestResult> {
+    fn handle_test_plan(&mut self, line: &str) {
         let plan_re = Regex::new(r"^\d+..(?P<test_plan>\d+)$").unwrap();
-
         if plan_re.is_match(&line) {
             let test_plan = plan_re.captures(&line)
                 .unwrap()
@@ -49,6 +48,11 @@ impl TapHarness {
 
             self.total_tests = test_plan;
         }
+    }
+
+    pub fn read_line(&mut self, line: &str) -> Option<TestResult> {
+
+        self.handle_test_plan(&line);
 
         let mut result = None;
         let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?").unwrap();
