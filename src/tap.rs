@@ -63,41 +63,44 @@ impl TapHarness {
 
             self.diagnostics.push(message.to_owned());
         }
+    }
 
+    fn handle_directive(&mut self, directive: &str, test_name: Option<&str>) -> Option<TestResult> {
+        let mut test_result = TestState::Passed;
+        if directive == "SKIP" {
+            self.skipped_tests += 1;
+            test_result = TestState::Skipped;
+        } else if directive == "TODO" {
+            self.incomplete_tests += 1;
+            test_result = TestState::Incomplete;
+        }
+
+        Some(TestResult {
+            name: test_name.unwrap().to_string(),
+            state: test_result,
+            diagnostics: None,
+        })
     }
 
     pub fn read_line(&mut self, line: &str) -> Option<TestResult> {
 
         self.handle_test_plan(&line);
-
         self.handle_diagnostic_line(&line);
+
         let mut result = None;
         let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?").unwrap();
         if test_line.is_match(&line) {
             self.test_count += 1;
 
-            let directive = test_line.captures(&line).unwrap()
-                .name("directive");
             let test_name = test_line.captures(&line).unwrap()
                 .name("test_name");
+            let directive = test_line.captures(&line).unwrap()
+                .name("directive");
 
             let mut test_result = TestState::Passed;
             match directive {
                 Some(d) => {
-                    if d == "SKIP" {
-                        self.skipped_tests += 1;
-                        test_result = TestState::Skipped;
-                    } else if d == "TODO" {
-                        self.incomplete_tests += 1;
-                        test_result = TestState::Incomplete;
-                    }
-
-                    // TODO: Remove this duplication when returning a result
-                    result = Some(TestResult {
-                        name: test_name.unwrap().to_string(),
-                        state: test_result,
-                        diagnostics: None,
-                    });
+                    result = self.handle_directive(d, test_name);
                 },
                 None => {
                     // Probably can do this a better way...
