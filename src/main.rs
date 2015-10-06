@@ -11,47 +11,44 @@ mod tap;
 use std::io::{self, BufRead};
 use tap::{TapHarness,TestState};
 
-// colorized output, eventually
 // flag to disable colorized output
 fn main() {
     let stdin = io::stdin();
-    let iter = stdin.lock().lines();
-    let mut parser = TapHarness::new();
+    let stdin_lines = stdin.lock().lines();
     let mut term = term::stdout().unwrap();
+    let mut harness = TapHarness::new();
 
-    for line_res in iter {
+    for line_res in stdin_lines {
         let line = line_res.unwrap();
-        let result = parser.read_line(&line.trim());
+        let result = harness.read_line(&line.trim());
 
-        match result {
-            Some(res) => {
-                let outcome = match res.state {
-                    TestState::Passed => "✓",
-                    TestState::Failed => "𐄂",
-                    TestState::Skipped => "—",
-                    TestState::Incomplete => "—",
-                };
+        result.map(|res| {
+            let mut term_color = term::color::YELLOW;
+            let outcome = match res.state {
+                TestState::Passed => {
+                    term_color = term::color::GREEN;
+                    "✓"
+                },
+                TestState::Failed => {
+                    term_color = term::color::RED;
+                    "𐄂"
+                },
+                _ => "—",
+            };
 
-                match res.state {
-                    TestState::Passed => term.fg(term::color::GREEN).unwrap(),
-                    TestState::Failed => term.fg(term::color::RED).unwrap(),
-                    TestState::Skipped => term.fg(term::color::YELLOW).unwrap(),
-                    TestState::Incomplete => term.fg(term::color::YELLOW).unwrap(),
-                };
-
-                writeln!(term, "{} {}", outcome, res.name).unwrap();
-                if let Some(diagnostic) = res.diagnostics {
-                    term.reset().unwrap();
-                    for message in diagnostic {
-                        println!("  {}", message);
-                    }
+            term.fg(term_color).unwrap();
+            writeln!(term, "{} {}", outcome, res.name).unwrap();
+            if let Some(diagnostic) = res.diagnostics {
+                term.reset().unwrap();
+                for message in diagnostic {
+                    println!("  {}", message);
                 }
             }
-            None => {}
-        }
+        });
+
         term.reset().unwrap();
     }
 
-    println!("{}", &parser.summarize());
+    println!("{}", &harness.summarize());
 }
 
