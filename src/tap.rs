@@ -24,7 +24,7 @@ pub enum TestState {
     Passed,
     Failed,
     Skipped,
-    Incomplete
+    Incomplete,
 }
 
 impl TapHarness {
@@ -43,11 +43,11 @@ impl TapHarness {
         let plan_re = Regex::new(r"^\d+..(?P<test_plan>\d+)$").unwrap();
         if plan_re.is_match(&line) {
             let test_plan = plan_re.captures(&line)
-                .unwrap()
-                .name("test_plan")
-                .unwrap()
-                .parse::<i32>()
-                .unwrap();
+                                   .unwrap()
+                                   .name("test_plan")
+                                   .unwrap()
+                                   .parse::<i32>()
+                                   .unwrap();
 
             self.total_tests = test_plan;
         }
@@ -57,9 +57,9 @@ impl TapHarness {
         let diagnostic_re = Regex::new(r"^# (?P<diagnostic>.*)").unwrap();
         if diagnostic_re.is_match(&line) {
             let message = diagnostic_re.captures(&line)
-                .unwrap()
-                .name("diagnostic")
-                .unwrap();
+                                       .unwrap()
+                                       .name("diagnostic")
+                                       .unwrap();
 
             self.diagnostics.push(message.to_owned());
         }
@@ -88,33 +88,38 @@ impl TapHarness {
         self.handle_diagnostic_line(&line);
 
         let mut result = None;
-        let test_line = Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?").unwrap();
+        let test_line =
+            Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?")
+                .unwrap();
         if test_line.is_match(&line) {
             self.test_count += 1;
 
-            let test_name = test_line.captures(&line).unwrap()
-                .name("test_name");
-            let directive = test_line.captures(&line).unwrap()
-                .name("directive");
+            let test_name = test_line.captures(&line)
+                                     .unwrap()
+                                     .name("test_name");
+            let directive = test_line.captures(&line)
+                                     .unwrap()
+                                     .name("directive");
 
             let mut test_result = TestState::Passed;
             match directive {
                 Some(d) => {
                     result = self.handle_directive(d, test_name);
-                },
+                }
                 None => {
                     // Probably can do this a better way...
-                    let is_failed = test_line.captures(&line).unwrap()
-                        .name("failed");
+                    let is_failed = test_line.captures(&line)
+                                             .unwrap()
+                                             .name("failed");
 
                     match is_failed {
                         Some(_) => {
                             self.failed_tests += 1;
                             test_result = TestState::Failed;
-                        },
+                        }
                         None => {
                             self.diagnostics.clear();
-                        },
+                        }
                     }
 
                     // print all diagnostic lines if we've failed
@@ -122,11 +127,11 @@ impl TapHarness {
                         name: test_name.unwrap().to_string(),
                         diagnostics: match &test_result {
                             &TestState::Failed => Some(self.diagnostics.drain(..).collect()),
-                            _ => None
+                            _ => None,
                         },
                         state: test_result,
                     });
-                },
+                }
             }
         }
 
@@ -143,14 +148,15 @@ impl TapHarness {
                 &self.total_tests,
                 failed_tests,
                 &self.incomplete_tests,
-                &self.skipped_tests).to_string()
+                &self.skipped_tests)
+            .to_string()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hamcrest::{assert_that,equal_to,is};
+    use hamcrest::{assert_that, equal_to, is};
 
     #[test]
     pub fn returns_number_of_tests_from_plan_line() {
@@ -172,11 +178,11 @@ mod tests {
 
     #[test]
     pub fn tracks_number_of_failed_tests() {
-        let input =
-"1..5
+        let input = "1..5
 ok 1 - Test the thing
 ok 2 - Test another thing
-not ok 3 - Test something broken
+not ok 3 - Test \
+                     something broken
 ok 4 - Test again
 not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new();
@@ -190,8 +196,7 @@ not ok 5 - Test another broken thing";
 
     #[test]
     pub fn missing_test_counted_as_failed() {
-        let input =
-"1..5
+        let input = "1..5
 ok - Test the thing
 not ok - Test something broken
 ok - Test again";
@@ -207,11 +212,12 @@ ok - Test again";
 
     #[test]
     pub fn skipped_test_not_considered_failed() {
-        let input =
-"1..5
+        let input = "1..5
 ok 1 - Test the thing # SKIP no foobaz available
-ok 2 - Test another thing # SKIP no foobaz available
-not ok 3 - Test something broken # SKIP no bar
+ok 2 - Test another \
+                     thing # SKIP no foobaz available
+not ok 3 - Test something broken # SKIP no \
+                     bar
 ok 4 - Test again
 not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new();
@@ -226,11 +232,12 @@ not ok 5 - Test another broken thing";
 
     #[test]
     pub fn todo_tests_not_considered_failed() {
-        let input =
-"1..5
+        let input = "1..5
 ok 1 - Test the thing # TODO finish this test
-ok 2 - Test another thing # TODO finish this test
-not ok 3 - Test something broken # TODO finish this test
+ok 2 - Test another thing \
+                     # TODO finish this test
+not ok 3 - Test something broken # TODO finish this \
+                     test
 ok 4 - Test again
 not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new();
@@ -244,11 +251,12 @@ not ok 5 - Test another broken thing";
 
     #[test]
     pub fn todo_tests_counted_as_incomplete_tests() {
-        let input =
-"1..5
+        let input = "1..5
 ok 1 - Test the thing # TODO finish this test
-ok 2 - Test another thing # TODO finish this test
-not ok 3 - Test something broken # TODO finish this test
+ok 2 - Test another thing \
+                     # TODO finish this test
+not ok 3 - Test something broken # TODO finish this \
+                     test
 ok 4 - Test again
 not ok 5 - Test another broken thing";
         let mut parser = TapHarness::new();
@@ -263,8 +271,7 @@ not ok 5 - Test another broken thing";
 
     #[test]
     pub fn read_line_for_failed_test_returns_passed_false() {
-        let input =
-"1..5
+        let input = "1..5
 not ok Test something broken";
         let mut parser = TapHarness::new();
         let mut lines = input.lines();

@@ -1,5 +1,3 @@
-#![feature(drain)]
-
 #[cfg(test)]
 extern crate hamcrest;
 
@@ -9,7 +7,7 @@ extern crate term;
 mod tap;
 
 use std::io::{self, BufRead};
-use tap::{TapHarness,TestState};
+use tap::{TapHarness, TestState};
 
 // flag to disable colorized output
 fn main() {
@@ -28,11 +26,11 @@ fn main() {
                 TestState::Passed => {
                     term_color = term::color::GREEN;
                     "✓"
-                },
+                }
                 TestState::Failed => {
                     term_color = term::color::RED;
                     "𐄂"
-                },
+                }
                 _ => "—",
             };
 
@@ -51,4 +49,3 @@ fn main() {
 
     println!("{}", &harness.summarize());
 }
-

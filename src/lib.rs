@@ -1,4 +1,3 @@
-#![feature(drain)]
 #[cfg(test)]
 extern crate hamcrest;
 

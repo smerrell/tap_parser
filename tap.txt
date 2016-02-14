@@ -1,0 +1,17 @@
+# this is a diagnostic message
+# this is also a diagnostic message
+ok test 1
+ok test 2
+# Something bad
+# Yep, really bad happened
+# Foo was not Bar
+not ok test 3
+ok test 4 # TODO finish this test
+# this is all good
+# yep, nothing bad happened
+ok test 5
+not ok test 6
+ok test 7 # SKIP skipping this test
+ok test 8
+ok test 9
+1..10
