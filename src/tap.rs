@@ -162,6 +162,15 @@ mod tests {
     }
 
     #[test]
+    pub fn handles_all_tests_skipped() {
+        let input = "1..0";
+        let mut parser = TapHarness::new();
+
+        parser.read_line(&input);
+        assert_that(parser.total_tests, is(equal_to(0)));
+    }
+
+    #[test]
     pub fn tracks_number_of_failed_tests() {
         let input =
 "1..5
