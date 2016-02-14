@@ -88,9 +88,7 @@ impl TapHarness {
         self.handle_diagnostic_line(&line);
 
         let mut result = None;
-        let test_line =
-            Regex::new(r"^(?P<failed>not )?ok (?P<test_name>[^#]+)(# )?(?P<directive>\w+)?")
-                .unwrap();
+        let test_line = test_line_regex();
         if test_line.is_match(&line) {
             self.test_count += 1;
 
@@ -153,10 +151,60 @@ impl TapHarness {
     }
 }
 
+fn test_line_regex() -> Regex {
+    Regex::new(r"^(?P<failed>not )?ok ?(?P<test_number>\d*)? ?(?P<test_name>[^#]+)?(# )?(?P<directive>\w+)?").unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::test_line_regex;
     use hamcrest::{assert_that, equal_to, is};
+
+    macro_rules! regex_matches{
+        ($regex:expr, $line:expr, $matches:expr) => {{
+            println!("'{}' - checking matches", $line);
+            assert_that($regex.is_match($line), is(equal_to($matches)));
+        }}
+    }
+
+    macro_rules! regex_match_group_equals {
+        ($regex:expr, $line:expr, $groupname:expr, $matches:expr) => {{
+
+            println!("checking group '{}' equals '{}'", $groupname, $matches);
+            let group_value = $regex.captures($line)
+                               .unwrap()
+                               .name($groupname)
+                               .unwrap();
+            assert_eq!(group_value, $matches);
+        }}
+    }
+
+    #[test]
+    pub fn handles_valid_tap_test_lines() {
+        let regex = test_line_regex();
+        regex_matches!(regex, "ok", true);
+        regex_matches!(regex, "ok # skip", true);
+        regex_matches!(regex, "not ok", true);
+        regex_matches!(regex, "not ok # skip", true);
+        regex_matches!(regex, "ok 1", true);
+        regex_matches!(regex, "ok 1 # skip", true);
+        regex_matches!(regex, "not ok 1 # skip", true);
+        regex_matches!(regex, "not ok 1 this is a test name", true);
+        regex_matches!(regex,
+                       "ok 1 this is a skipped test # SKIP no db available",
+                       true);
+        regex_matches!(regex, "ok this is a skipped test # TODO not finished", true);
+    }
+
+    #[test]
+    pub fn match_groups_work_properly_for_test_lines() {
+        let regex = test_line_regex();
+        regex_match_group_equals!(regex, "ok 1", "test_number", "1");
+        regex_match_group_equals!(regex, "not ok 1", "failed", "not ");
+        regex_match_group_equals!(regex, "ok # skip", "directive", "skip");
+        regex_match_group_equals!(regex, "ok test name # skip", "test_name", "test name ");
+    }
 
     #[test]
     pub fn returns_number_of_tests_from_plan_line() {
