@@ -32,6 +32,11 @@ Currently this is the only way to use this as this is not yet published on
 For now, the source is the best place to look but there will be Rustdoc for this
 going forward. This project is in quite an early state.
 
+## Contributing
+
+Things are still in a pretty early phase and the Rust is not very idiomatic but
+contributions are welcome if you're interested in helping.
+
 ## License
 
 This project is licensed under the [MIT](https://opensource.org/licenses/MIT)
