@@ -8,7 +8,7 @@ name = "tap_parser"
 path = "src/lib.rs"
 
 [dependencies]
-regex = "~0.1.41"
+regex = "0.1.69"
 term = "0.4.4"
 
 [dev-dependencies]
